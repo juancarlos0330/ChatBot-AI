@@ -3,12 +3,13 @@ import socketIOClient from "socket.io-client";
 
 // import component
 import ChatBot from "./components/ChatBot";
+import { socketURL } from "./config/config";
 
 // import styles
 import "./App.css";
 
 // Socket.io connection
-const socket = socketIOClient("http://85.208.110.183:5000"); // Change to your backend URL
+const socket = socketIOClient(socketURL); // Change to your backend URL
 
 const App = () => {
   // useEffect(() => {

@@ -1,39 +1,71 @@
 import React, { useEffect, useState } from "react";
 import { AiOutlineClose, AiOutlineEnter } from "react-icons/ai";
 import { FaArrowsRotate } from "react-icons/fa6";
+import { jwtDecode } from "jwt-decode";
+
+// import functions
+import { signIn } from "../actions/UserAction";
 
 // import component
 import ClipboardCopy from "./ClipboardCopy";
-
-// import styles
-import "./ChatBot.scss";
+import CodeBlock from "./CodeBlock";
 
 // import assets
 import chatBotImgUrl from "../assets/chatbot.svg";
-import CodeBlock from "./CodeBlock";
+import signBtnLoadImgUrl from "../assets/loading.gif";
+
+// import styles
+import "./ChatBot.scss";
 
 const ChatBot = ({ socket }) => {
   const [flag, setFlag] = useState(false);
   const [email, setEmail] = useState("");
   const [emailIsValid, setEmailIsValid] = useState(true);
   const [input, setInput] = useState("");
+  const [signBtnLoadingFlag, setSignBtnLoadingFlag] = useState(false);
   const [signFlag, setSignFlag] = useState(true);
   const [message, setMessage] = useState([
     {
       flag: false,
-      message: "Hello! How can I assist you today?",
+      message: `Hello! How can I assist you today?`,
     },
   ]);
+
+  // check if token is expired
+  useEffect(() => {
+    if (localStorage.getItem("jwtToken")) {
+      const decoded = jwtDecode(localStorage.getItem("jwtToken"));
+      const currentTime = Date.now() / 1000;
+      if (decoded.exp < currentTime) {
+        localStorage.removeItem("jwtToken");
+        setSignFlag(true);
+      } else {
+        setEmail(decoded.email);
+        setSignFlag(false);
+      }
+    }
+  }, []);
 
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   };
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     setEmailIsValid(validateEmail(email));
     if (validateEmail(email)) {
-      setSignFlag(false);
+      setSignBtnLoadingFlag(true);
+      const res = await signIn(email);
+      if (res.data.success) {
+        localStorage.setItem("jwtToken", res.data.token);
+        const decoded = jwtDecode(res.data.token);
+        setEmail(decoded.email);
+        setSignFlag(false);
+        setSignBtnLoadingFlag(false);
+      } else {
+        setSignBtnLoadingFlag(false);
+        setSignFlag(true);
+      }
     }
   };
 
@@ -116,8 +148,18 @@ const ChatBot = ({ socket }) => {
                     <p className="error-email">Please enter a valid email</p>
                   )}
                 </div>
-                <div className="signBtnSection" onClick={handleSignIn}>
-                  <button className="signBtn">Sign In</button>
+                <div className="signBtnSection">
+                  <button className="signBtn" onClick={handleSignIn}>
+                    {signBtnLoadingFlag ? (
+                      <img
+                        alt="loading"
+                        className="signLoadingSection"
+                        src={signBtnLoadImgUrl}
+                      />
+                    ) : (
+                      "Sign In"
+                    )}
+                  </button>
                 </div>
               </div>
             ) : (
