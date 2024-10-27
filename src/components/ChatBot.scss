@@ -58,10 +58,99 @@
         }
       }
 
+      .signSection {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding: 8px 24px;
+        height: 100%;
+        justify-content: flex-end;
+
+        .logoSection {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          justify-content: center;
+          align-items: center;
+
+          .logoTitle {
+            font-size: 54px;
+            font-weight: 700;
+            margin-bottom: 15px;
+          }
+
+          .logoText {
+            font-size: 16px;
+          }
+        }
+
+        .emailSection {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
+          margin: 0;
+
+          .textInput {
+            width: 100%;
+            height: 50px;
+            border-radius: 8px;
+            outline: none;
+            background-color: transparent;
+            border: 1px solid rgb(194, 196, 199);
+            color: #444141;
+            padding: 0 15px;
+            font-size: 16px;
+          }
+
+          .textError {
+            border: 1px solid red;
+          }
+
+          .error-email {
+            margin-top: 5px;
+            font-size: 14px;
+            color: red;
+          }
+        }
+
+        .signBtnSection {
+          display: flex;
+          width: 100%;
+          margin: 20px 0;
+
+          .signBtn {
+            width: 100%;
+            height: 50px;
+            background-color: transparent;
+            outline: none;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: linear-gradient(
+              97deg,
+              rgb(4, 151, 220) 0%,
+              rgb(70, 92, 224) 100%
+            );
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.2s ease-in-out;
+
+            &:hover {
+              background: linear-gradient(
+                97deg,
+                rgb(70, 92, 224) 0%,
+                rgb(4, 151, 220) 100%
+              );
+            }
+          }
+        }
+      }
+
       .chatContent {
         flex: 1;
         width: 100%;
-        padding: 8px 24px;
+        padding: 8px 24px 20px 24px;
         overflow: auto;
 
         &::-webkit-scrollbar {
@@ -101,6 +190,15 @@
           margin: 10px 0 10px auto;
           font-size: 15px;
           line-height: 22px;
+
+          .messagePart {
+            color: #fff;
+            margin-bottom: 10px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
         }
 
         .receiverSection {
@@ -109,6 +207,31 @@
           align-items: flex-end;
           justify-content: space-between;
           margin: 10px 0;
+          position: relative;
+
+          &:hover {
+            .copySection {
+              display: flex;
+            }
+          }
+
+          .copySection {
+            display: none;
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            z-index: 10;
+            cursor: pointer;
+            background-color: transparent;
+            outline: none;
+            border: none;
+
+            svg {
+              path {
+                color: rgb(70, 92, 224);
+              }
+            }
+          }
 
           .chatBotImg {
             margin-right: 10px;
@@ -130,6 +253,15 @@
             flex: 1;
             font-size: 15px;
             line-height: 22px;
+
+            .messagePart {
+              color: #5f5d5d;
+              margin-bottom: 10px;
+
+              &:last-child {
+                margin-bottom: 0;
+              }
+            }
           }
         }
       }

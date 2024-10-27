@@ -2,30 +2,40 @@ import React, { useEffect, useState } from "react";
 import { AiOutlineClose, AiOutlineEnter } from "react-icons/ai";
 import { FaArrowsRotate } from "react-icons/fa6";
 
+// import component
+import ClipboardCopy from "./ClipboardCopy";
+
 // import styles
 import "./ChatBot.scss";
 
 // import assets
 import chatBotImgUrl from "../assets/chatbot.svg";
+import CodeBlock from "./CodeBlock";
 
 const ChatBot = ({ socket }) => {
   const [flag, setFlag] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailIsValid, setEmailIsValid] = useState(true);
   const [input, setInput] = useState("");
+  const [signFlag, setSignFlag] = useState(true);
   const [message, setMessage] = useState([
     {
-      flag: true,
-      message: "I want to know how to work this site",
-    },
-    {
-      flag: true,
-      message: "Hi",
-    },
-    {
       flag: false,
-      message:
-        "Hello! How can I assist you today with LiveAgent? Hello! How can I assist you today with LiveAgent?",
+      message: "Hello! How can I assist you today?",
     },
   ]);
+
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const handleSignIn = () => {
+    setEmailIsValid(validateEmail(email));
+    if (validateEmail(email)) {
+      setSignFlag(false);
+    }
+  };
 
   useEffect(() => {
     socket.on("receiveMessage", (message) => {
@@ -81,42 +91,103 @@ const ChatBot = ({ socket }) => {
                 <AiOutlineClose style={{ fontSize: "20px" }} />
               </button>
             </div>
-            <div className="chatContent" id="chatContent">
-              {message.map((item, index) => {
-                return item.flag ? (
-                  <div className="senderMsg" key={index}>
-                    {item.message}
-                  </div>
-                ) : (
-                  <div className="receiverSection" key={index}>
-                    <img
-                      src={chatBotImgUrl}
-                      alt="chatBot"
-                      className="chatBotImg"
-                    />
-                    <div className="receiverMsg">{item.message}</div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="chatFooter">
-              <div className="chatSendSection">
-                <button className="refreshBtn" onClick={() => alert("refresh")}>
-                  <FaArrowsRotate style={{ fontSize: "16px" }} />
-                </button>
-                <input
-                  type="text"
-                  value={input}
-                  placeholder="Ask me any questions..."
-                  className="messageText"
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                />
-                <button className="sendBtn" onClick={sendMessage}>
-                  <AiOutlineEnter style={{ fontSize: "16px" }} />
-                </button>
+            {signFlag ? (
+              <div className="signSection">
+                <div className="logoSection">
+                  <div className="logoTitle">Sign In</div>
+                  <div className="logoText">with Email</div>
+                </div>
+                <div className="emailSection">
+                  <input
+                    type="text"
+                    className={`textInput ${emailIsValid ? "" : "textError"}`}
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSignIn();
+                      }
+                    }}
+                  />
+                  {!emailIsValid && (
+                    <p className="error-email">Please enter a valid email</p>
+                  )}
+                </div>
+                <div className="signBtnSection" onClick={handleSignIn}>
+                  <button className="signBtn">Sign In</button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="chatContent" id="chatContent">
+                  {message.map((item, index) => {
+                    return item.flag ? (
+                      <div className="senderMsg" key={index}>
+                        {item.message
+                          .split(/(?<=\.)\s*\n\n?/)
+                          .map((section, index) => (
+                            <div key={index} className="messagePart">
+                              {section}
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="receiverSection" key={index}>
+                        <img
+                          src={chatBotImgUrl}
+                          alt="chatBot"
+                          className="chatBotImg"
+                        />
+                        <ClipboardCopy message={item.message} />
+                        <div className="receiverMsg">
+                          {item.message.includes("```") ? (
+                            item.message
+                              .split("```")
+                              .map((part, idx) => (
+                                <CodeBlock key={idx} codeString={part} />
+                              ))
+                          ) : (
+                            <>
+                              {item.message
+                                .split(/(?<=\.)\s*\n\n?/)
+                                .map((section, index) => (
+                                  <div key={index} className="messagePart">
+                                    {section}
+                                  </div>
+                                ))}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="chatFooter">
+                  <div className="chatSendSection">
+                    <button
+                      className="refreshBtn"
+                      onClick={() => alert("refresh")}
+                    >
+                      <FaArrowsRotate style={{ fontSize: "16px" }} />
+                    </button>
+                    <input
+                      type="text"
+                      value={input}
+                      placeholder="Ask me any questions..."
+                      className="messageText"
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                    />
+                    <button className="sendBtn" onClick={sendMessage}>
+                      <AiOutlineEnter style={{ fontSize: "16px" }} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

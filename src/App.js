@@ -8,7 +8,7 @@ import ChatBot from "./components/ChatBot";
 import "./App.css";
 
 // Socket.io connection
-const socket = socketIOClient("http://localhost:5000"); // Change to your backend URL
+const socket = socketIOClient("http://85.208.110.183:5000"); // Change to your backend URL
 
 const App = () => {
   // useEffect(() => {
