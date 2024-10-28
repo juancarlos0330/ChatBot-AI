@@ -47,23 +47,17 @@ const Admin = ({ socket }) => {
   };
 
   useEffect(() => {
-    socket.on("notifyToAdmin", (res) => {
-      console.log("notify");
-      if (res === "update") {
-        getUserList();
-      }
-    });
-
-    return () => {
-      socket.off();
-    };
-  }, [userList]);
-
-  useEffect(() => {
     socket.on("private-message", (message) => {
       console.log(message);
       if (userActiveEmail === message.email) {
         setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    socket.on("notifyToAdmin", (res) => {
+      console.log("notify");
+      if (res === "update") {
+        getUserList();
       }
     });
 
