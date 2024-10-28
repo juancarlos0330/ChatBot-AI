@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import { AiOutlineEnter } from "react-icons/ai";
 import { FaArrowsRotate } from "react-icons/fa6";
 
 // import functions
@@ -12,6 +13,7 @@ import ClipboardCopy from "../ClipboardCopy";
 
 // import assets
 import chatBotImgUrl from "../../assets/chatbot.svg";
+import signBtnLoadImgUrl from "../../assets/loading.gif";
 
 // import styles
 import "./Admin.scss";
@@ -19,26 +21,38 @@ import "./Admin.scss";
 const Admin = ({ socket }) => {
   const [signPageFlag, setSignPageFlag] = useState(true);
   const [email, setEmail] = useState("");
+  const [userActiveEmail, setUserActiveEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorEmail, setErrorEmail] = useState(false);
   const [errorPassword, setErrorPassword] = useState(false);
   const [userList, setUserList] = useState([]);
   const [activeIndex, setActiveIndex] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [loadingFlag, setLoadingFlag] = useState(false);
+  const [signLoadingFlag, setSignLoadingFlag] = useState(false);
 
   const getUserList = async () => {
+    setLoadingFlag(true);
     const res = await getUserListAPI();
     if (res.data.success) {
+      setLoadingFlag(false);
       setUserList(res.data.result);
+    } else {
+      setLoadingFlag(false);
     }
   };
 
   const handleItemClick = async (index, email) => {
     setActiveIndex(index);
+    setLoadingFlag(true);
     setMessages([]);
+    setUserActiveEmail(email);
     const results = await getChatHistory(email);
     if (results.data.success) {
+      setLoadingFlag(false);
       setMessages(results.data.result);
+    } else {
+      setLoadingFlag(false);
     }
   };
 
@@ -71,15 +85,19 @@ const Admin = ({ socket }) => {
   }, []);
 
   const handleSignIn = async () => {
+    setSignLoadingFlag(true);
     if (email === "" && password === "") {
       setErrorEmail(true);
       setErrorPassword(true);
+      setSignLoadingFlag(false);
     } else if (email !== "admin@admin.com") {
       setErrorEmail(true);
       setErrorPassword(false);
+      setSignLoadingFlag(false);
     } else if (password !== "admin") {
       setErrorEmail(false);
       setErrorPassword(true);
+      setSignLoadingFlag(false);
     } else {
       setErrorEmail(false);
       setErrorPassword(false);
@@ -91,12 +109,13 @@ const Admin = ({ socket }) => {
         setEmail(decoded.email);
         setSignPageFlag(false);
         await getUserList();
-
+        setSignLoadingFlag(false);
         // UserJoined emit event to server
         socket.emit("userJoined", decoded.email);
       } else {
         setSignBtnLoadingFlag(false);
         setSignFlag(true);
+        setSignLoadingFlag(false);
       }
     }
   };
@@ -141,7 +160,15 @@ const Admin = ({ socket }) => {
           </div>
           <div className="textInputView">
             <button type="button" className="signButton" onClick={handleSignIn}>
-              Sign In
+              {signLoadingFlag ? (
+                <img
+                  src={signBtnLoadImgUrl}
+                  alt="loading"
+                  className="signInButtonLoading"
+                />
+              ) : (
+                "Sign In"
+              )}
             </button>
           </div>
         </div>
@@ -170,68 +197,74 @@ const Admin = ({ socket }) => {
               );
             })}
           </div>
-          <div className="adminContentSection" id="chatContent">
-            <div className="chatContent">
-              {messages.map((item, index) => {
-                return item.flag ? (
-                  <div className="senderMsg" key={index}>
-                    {item.message
-                      .split(/(?<=\.)\s*\n\n?/)
-                      .map((section, index) => (
-                        <div key={index} className="messagePart">
-                          {section}
+          <div className="adminContentSection">
+            {loadingFlag ? (
+              <img
+                src={signBtnLoadImgUrl}
+                alt="loading"
+                className="loadingChatContent"
+              />
+            ) : (
+              <>
+                <div className="chatContent" id="chatContent">
+                  {messages.map((item, index) => {
+                    return item.flag ? (
+                      <div className="senderMsg" key={index}>
+                        {item.message
+                          .split(/(?<=\.)\s*\n\n?/)
+                          .map((section, index) => (
+                            <div key={index} className="messagePart">
+                              {section}
+                            </div>
+                          ))}
+                      </div>
+                    ) : (
+                      <div className="receiverSection" key={index}>
+                        <img
+                          src={chatBotImgUrl}
+                          alt="chatBot"
+                          className="chatBotImg"
+                        />
+                        <ClipboardCopy message={item.message} />
+                        <div className="receiverMsg">
+                          {item.message.includes("```") ? (
+                            item.message
+                              .split("```")
+                              .map((part, idx) => (
+                                <CodeBlock key={idx} codeString={part} />
+                              ))
+                          ) : (
+                            <>
+                              {item.message
+                                .split(/(?<=\.)\s*\n\n?/)
+                                .map((section, index) => (
+                                  <div key={index} className="messagePart">
+                                    {section}
+                                  </div>
+                                ))}
+                            </>
+                          )}
                         </div>
-                      ))}
-                  </div>
-                ) : (
-                  <div className="receiverSection" key={index}>
-                    <img
-                      src={chatBotImgUrl}
-                      alt="chatBot"
-                      className="chatBotImg"
-                    />
-                    <ClipboardCopy message={item.message} />
-                    <div className="receiverMsg">
-                      {item.message.includes("```") ? (
-                        item.message
-                          .split("```")
-                          .map((part, idx) => (
-                            <CodeBlock key={idx} codeString={part} />
-                          ))
-                      ) : (
-                        <>
-                          {item.message
-                            .split(/(?<=\.)\s*\n\n?/)
-                            .map((section, index) => (
-                              <div key={index} className="messagePart">
-                                {section}
-                              </div>
-                            ))}
-                        </>
-                      )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {messages.length > 0 && (
+                  <div className="chatFooter">
+                    <div className="chatSendSection">
+                      <input
+                        type="text"
+                        placeholder={`Chat with ${userActiveEmail}`}
+                        className="messageText"
+                      />
+                      <button className="sendBtn">
+                        <AiOutlineEnter style={{ fontSize: "16px" }} />
+                      </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-            {/* <div className="chatFooter">
-              <div className="chatSendSection">
-                <button className="refreshBtn" onClick={() => alert("refresh")}>
-                  <FaArrowsRotate style={{ fontSize: "16px" }} />
-                </button>
-                <input
-                  type="text"
-                  value={input}
-                  placeholder="Ask me any questions..."
-                  className="messageText"
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                />
-                <button className="sendBtn" onClick={sendMessage}>
-                  <AiOutlineEnter style={{ fontSize: "16px" }} />
-                </button>
-              </div>
-            </div> */}
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
