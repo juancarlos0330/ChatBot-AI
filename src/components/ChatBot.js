@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";
 
 // import functions
 import { signIn } from "../actions/UserAction";
+import { getChatHistory } from "../actions/ChatAction";
 
 // import component
 import ClipboardCopy from "./ClipboardCopy";
@@ -28,8 +29,24 @@ const ChatBot = ({ socket }) => {
     {
       flag: false,
       message: `Hello! How can I assist you today?`,
+      botFlag: true,
     },
   ]);
+
+  const handleGetChatHistory = async (paramEmail) => {
+    const res = await getChatHistory(paramEmail);
+    if (res.data.success) {
+      const tempMessage = res.data.result.map((item) => {
+        return {
+          flag: item.flag,
+          message: item.message,
+          email: item.email,
+          botFlag: item.botFlag,
+        };
+      });
+      setMessage((prev) => [...prev, ...tempMessage]);
+    }
+  };
 
   // check if token is expired
   useEffect(() => {
@@ -40,6 +57,7 @@ const ChatBot = ({ socket }) => {
         localStorage.removeItem("jwtToken");
         setSignFlag(true);
       } else {
+        handleGetChatHistory(decoded.email);
         setEmail(decoded.email);
         setSignFlag(false);
       }
@@ -60,6 +78,7 @@ const ChatBot = ({ socket }) => {
         localStorage.setItem("jwtToken", res.data.token);
         const decoded = jwtDecode(res.data.token);
         setEmail(decoded.email);
+        await handleGetChatHistory(decoded.email);
         setSignFlag(false);
         setSignBtnLoadingFlag(false);
       } else {
@@ -99,6 +118,8 @@ const ChatBot = ({ socket }) => {
       const senderMsg = {
         flag: true,
         message: input,
+        email,
+        botFlag: true,
       };
       socket.emit("sendMessage", senderMsg);
       setMessage((prev) => [...prev, senderMsg]);
@@ -149,7 +170,7 @@ const ChatBot = ({ socket }) => {
                   )}
                 </div>
                 <div className="signBtnSection">
-                  <button className="signBtn" onClick={handleSignIn}>
+                  <button className="signBtn" onClick={() => handleSignIn()}>
                     {signBtnLoadingFlag ? (
                       <img
                         alt="loading"
