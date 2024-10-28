@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { AiOutlineEnter } from "react-icons/ai";
-import { FaArrowsRotate } from "react-icons/fa6";
 
 // import functions
 import { adminSignIn, getUserListAPI } from "../../actions/UserAction";
@@ -30,6 +29,7 @@ const Admin = ({ socket }) => {
   const [messages, setMessages] = useState([]);
   const [loadingFlag, setLoadingFlag] = useState(false);
   const [signLoadingFlag, setSignLoadingFlag] = useState(false);
+  const [input, setInput] = useState("");
 
   const getUserList = async () => {
     setLoadingFlag(true);
@@ -42,10 +42,24 @@ const Admin = ({ socket }) => {
     }
   };
 
+  useEffect(() => {
+    socket.on("private-message", (message) => {
+      console.log(message, userActiveEmail);
+      if (userActiveEmail === message.email) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    return () => {
+      socket.off();
+    };
+  }, [userActiveEmail]);
+
   const handleItemClick = async (index, email) => {
     setActiveIndex(index);
     setLoadingFlag(true);
     setMessages([]);
+    console.log(email);
     setUserActiveEmail(email);
     const results = await getChatHistory(email);
     if (results.data.success) {
@@ -83,6 +97,21 @@ const Admin = ({ socket }) => {
       }
     }
   }, []);
+
+  const handleSendMessage = () => {
+    setInput("");
+    if (input.trim() !== "") {
+      const senderMsg = {
+        flag: false,
+        message: input,
+        receiverEmail: userActiveEmail,
+        email: userActiveEmail,
+        botFlag: false,
+      };
+      socket.emit("private-message", senderMsg);
+      setMessages((prev) => [...prev, senderMsg]);
+    }
+  };
 
   const handleSignIn = async () => {
     setSignLoadingFlag(true);
@@ -208,7 +237,7 @@ const Admin = ({ socket }) => {
               <>
                 <div className="chatContent" id="chatContent">
                   {messages.map((item, index) => {
-                    return item.flag ? (
+                    return !item.flag ? (
                       <div className="senderMsg" key={index}>
                         {item.message
                           .split(/(?<=\.)\s*\n\n?/)
@@ -256,8 +285,15 @@ const Admin = ({ socket }) => {
                         type="text"
                         placeholder={`Chat with ${userActiveEmail}`}
                         className="messageText"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSendMessage();
+                          }
+                        }}
                       />
-                      <button className="sendBtn">
+                      <button className="sendBtn" onClick={handleSendMessage}>
                         <AiOutlineEnter style={{ fontSize: "16px" }} />
                       </button>
                     </div>

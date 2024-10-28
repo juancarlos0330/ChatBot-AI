@@ -25,6 +25,7 @@ const ChatBot = ({ socket }) => {
   const [input, setInput] = useState("");
   const [signBtnLoadingFlag, setSignBtnLoadingFlag] = useState(false);
   const [signFlag, setSignFlag] = useState(true);
+  const [adminCheckFlag, setAdminCheckFlag] = useState(true);
   const [message, setMessage] = useState([
     {
       flag: false,
@@ -96,6 +97,9 @@ const ChatBot = ({ socket }) => {
 
   useEffect(() => {
     socket.on("receiveMessage", (message) => {
+      if (!message.botFlag) {
+        setAdminCheckFlag(message.botFlag);
+      }
       setMessage((prev) => [...prev, message]);
     });
 
@@ -131,14 +135,26 @@ const ChatBot = ({ socket }) => {
   const sendMessage = () => {
     setInput("");
     if (input.trim() !== "") {
-      const senderMsg = {
-        flag: true,
-        message: input,
-        email,
-        botFlag: true,
-      };
-      socket.emit("sendMessage", senderMsg);
-      setMessage((prev) => [...prev, senderMsg]);
+      if (!adminCheckFlag) {
+        const senderMsg = {
+          flag: true,
+          message: input,
+          receiverEmail: "admin@admin.com",
+          email,
+          botFlag: false,
+        };
+        socket.emit("private-message", senderMsg);
+        setMessage((prev) => [...prev, senderMsg]);
+      } else {
+        const senderMsg = {
+          flag: true,
+          message: input,
+          email,
+          botFlag: true,
+        };
+        socket.emit("sendMessage", senderMsg);
+        setMessage((prev) => [...prev, senderMsg]);
+      }
     }
   };
 
