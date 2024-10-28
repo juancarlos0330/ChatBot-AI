@@ -60,6 +60,9 @@ const ChatBot = ({ socket }) => {
         handleGetChatHistory(decoded.email);
         setEmail(decoded.email);
         setSignFlag(false);
+
+        // UserJoined emit event to server
+        socket.emit("userJoined", decoded.email);
       }
     }
   }, []);
@@ -81,6 +84,9 @@ const ChatBot = ({ socket }) => {
         await handleGetChatHistory(decoded.email);
         setSignFlag(false);
         setSignBtnLoadingFlag(false);
+
+        // UserJoined emit event to server
+        socket.emit("userJoined", decoded.email);
       } else {
         setSignBtnLoadingFlag(false);
         setSignFlag(true);
@@ -90,6 +96,16 @@ const ChatBot = ({ socket }) => {
 
   useEffect(() => {
     socket.on("receiveMessage", (message) => {
+      setMessage((prev) => [...prev, message]);
+    });
+
+    return () => {
+      socket.off();
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on("private-message", (message) => {
       setMessage((prev) => [...prev, message]);
     });
 
@@ -170,7 +186,7 @@ const ChatBot = ({ socket }) => {
                   )}
                 </div>
                 <div className="signBtnSection">
-                  <button className="signBtn" onClick={() => handleSignIn()}>
+                  <button className="signBtn" onClick={handleSignIn}>
                     {signBtnLoadingFlag ? (
                       <img
                         alt="loading"

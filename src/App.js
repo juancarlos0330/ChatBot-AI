@@ -1,9 +1,13 @@
 import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import socketIOClient from "socket.io-client";
+
+// import config file
+import { socketURL } from "./config/config";
 
 // import component
 import ChatBot from "./components/ChatBot";
-import { socketURL } from "./config/config";
+import Admin from "./components/Admin/Admin";
 
 // import styles
 import "./App.css";
@@ -23,9 +27,14 @@ const App = () => {
   // }, []);
 
   return (
-    <div className="App">
-      <ChatBot socket={socket} />
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/" exact element={<ChatBot socket={socket} />} />
+          <Route path="/admin" exact element={<Admin socket={socket} />} />
+        </Routes>
+      </div>
+    </Router>
   );
 };
 
