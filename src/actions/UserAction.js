@@ -34,3 +34,15 @@ export const getUserListAPI = async () => {
     return "error";
   }
 };
+
+export const updateNotifyCount = async (email) => {
+  try {
+    const response = await axios.post(`${apiURL}/users/updateNotifyCount`, {
+      email,
+    });
+    return response;
+  } catch (err) {
+    console.log(err);
+    return "error";
+  }
+};

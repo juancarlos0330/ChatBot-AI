@@ -139,7 +139,24 @@
         .userName {
           margin-left: 10px;
           color: #444141;
-          font-size: 18px;
+          font-size: 16px;
+        }
+
+        .notifyNum {
+          color: #e31616;
+          position: absolute;
+          right: 5px;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 12px;
+          font-weight: 700;
+          width: 26px;
+          height: 26px;
+          background-color: #ddd;
+          border-radius: 50px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
       }
 

@@ -3,7 +3,11 @@ import { jwtDecode } from "jwt-decode";
 import { AiOutlineEnter } from "react-icons/ai";
 
 // import functions
-import { adminSignIn, getUserListAPI } from "../../actions/UserAction";
+import {
+  adminSignIn,
+  getUserListAPI,
+  updateNotifyCount,
+} from "../../actions/UserAction";
 import { getChatHistory } from "../../actions/ChatAction";
 
 // import components
@@ -43,8 +47,21 @@ const Admin = ({ socket }) => {
   };
 
   useEffect(() => {
+    socket.on("notifyToAdmin", (res) => {
+      console.log("notify");
+      if (res === "update") {
+        getUserList();
+      }
+    });
+
+    return () => {
+      socket.off();
+    };
+  }, [userList]);
+
+  useEffect(() => {
     socket.on("private-message", (message) => {
-      console.log(message, userActiveEmail);
+      console.log(message);
       if (userActiveEmail === message.email) {
         setMessages((prev) => [...prev, message]);
       }
@@ -55,12 +72,19 @@ const Admin = ({ socket }) => {
     };
   }, [userActiveEmail]);
 
-  const handleItemClick = async (index, email) => {
+  const handleItemClick = async (index, email, notifyCount) => {
     setActiveIndex(index);
     setLoadingFlag(true);
     setMessages([]);
-    console.log(email);
     setUserActiveEmail(email);
+    const updateResult = await updateNotifyCount(email);
+    if (updateResult.data.success) {
+      const res = await getUserListAPI();
+      if (res.data.success) {
+        setUserList(res.data.result);
+      }
+    }
+
     const results = await getChatHistory(email);
     if (results.data.success) {
       setLoadingFlag(false);
@@ -211,7 +235,9 @@ const Admin = ({ socket }) => {
                     activeIndex === index ? "userActive" : ""
                   }`}
                   key={index}
-                  onClick={() => handleItemClick(index, item.email)}
+                  onClick={() =>
+                    handleItemClick(index, item.email, item?.notifyCount)
+                  }
                 >
                   <img
                     alt="userAvatar"
@@ -222,6 +248,9 @@ const Admin = ({ socket }) => {
                     className="userAvatar"
                   />
                   <p className="userName">{item.email}</p>
+                  {Number(item?.notifyCount) !== 0 && (
+                    <p className="notifyNum">{item?.notifyCount}</p>
+                  )}
                 </div>
               );
             })}
