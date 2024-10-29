@@ -160,8 +160,7 @@ const Admin = ({ socket }) => {
         // UserJoined emit event to server
         socket.emit("userJoined", decoded.email);
       } else {
-        setSignBtnLoadingFlag(false);
-        setSignFlag(true);
+        setSignPageFlag(true);
         setSignLoadingFlag(false);
       }
     }
